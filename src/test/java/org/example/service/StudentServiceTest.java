@@ -5,23 +5,26 @@ import org.example.dtoobject.mapping.StudentMapping;
 import org.example.entity.Profile;
 import org.example.entity.Student;
 import org.example.repository.StudentRepository;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.List;
 import java.util.Optional;
 
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@DisplayName("StudentService")
 @ExtendWith(MockitoExtension.class)
 class StudentServiceTest {
+
     @Mock
     StudentRepository studentRepository;
 
@@ -31,76 +34,241 @@ class StudentServiceTest {
     @InjectMocks
     StudentService studentService;
 
+    @Nested
+    @DisplayName("findAll()")
+    class FindAll {
+        @Test
+        @DisplayName("возвращает пустой список, если студентов нет")
+        void shouldReturnEmptyList() {
+            when(studentRepository.findAll()).thenReturn(List.of());
 
-    @Test
-    void findAllTest() {
-        when(studentRepository.findAll()).thenReturn(List.of());
+            List<StudentDto> result = studentService.findAll();
 
-        List<StudentDto> student = studentService.findAll();
-        assertTrue(student.isEmpty());
+            assertTrue(result.isEmpty());
+            verifyNoInteractions(studentMapping);
+            verify(studentRepository).findAll();
+        }
 
+        @Test
+        @DisplayName("возвращает список DTO с маппингом")
+        void shouldReturnMappedDtoList() {
+            Student student = new Student();
+            student.setId(1L);
+            student.setFirstName("Иван");
+            student.setLastName("Петров");
 
-        verifyNoInteractions(studentMapping);
-        verify(studentRepository).findAll();
+            StudentDto dto = new StudentDto();
+            dto.setId(1L);
+            dto.setFirstName("Иван");
+            dto.setLastName("Петров");
+
+            when(studentRepository.findAll()).thenReturn(List.of(student));
+            when(studentMapping.toDto(student)).thenReturn(dto);
+
+            List<StudentDto> result = studentService.findAll();
+
+            assertEquals(1, result.size());
+            assertEquals(dto, result.get(0));
+            verify(studentMapping).toDto(student);
+        }
     }
 
+    @Nested
+    @DisplayName("findById()")
+    class FindById {
+        @Test
+        @DisplayName("возвращает DTO, если студент найден")
+        void shouldReturnDto_whenExists() {
+            Long id = 1L;
+            Student student = new Student();
+            student.setId(id);
+            student.setFirstName("Анна");
 
+            StudentDto dto = new StudentDto();
+            dto.setId(id);
+            dto.setFirstName("Анна");
 
-    @Test
-    void findById() {
-        Profile testprofile = new Profile();
-        testprofile.setId(1L);
-        Student teststudent = new Student();
-        teststudent.setFirstName("testfname");
-        teststudent.setLastName("testlname");
-        teststudent.setProfile(testprofile);
-        when(studentRepository.findById(anyLong())).thenAnswer(invocation -> {
-            Long id = invocation.getArgument(0);
+            when(studentRepository.findById(id)).thenReturn(Optional.of(student));
+            when(studentMapping.toDto(student)).thenReturn(dto);
 
-            teststudent.setId(id);
-            return Optional.of(teststudent);
-        });
-        StudentDto expected = new StudentDto();
-        expected.setId(23L);
-        when(studentMapping.toDto(any(Student.class))).thenReturn(expected);
+            StudentDto result = studentService.findById(id);
 
-        StudentDto student = studentService.findById(23L);
+            assertNotNull(result);
+            assertEquals(id, result.getId());
+            verify(studentRepository).findById(id);
+            verify(studentMapping).toDto(student);
+        }
 
-       ArgumentCaptor<Student> captor = ArgumentCaptor.forClass(Student.class);
-       verify(studentMapping).toDto(captor.capture());
-       Student captore = captor.getValue();
+        @Test
+        @DisplayName("кидает исключение, если студент не найден")
+        void shouldThrow_whenNotFound() {
+            Long id = 99L;
+            when(studentRepository.findById(id)).thenReturn(Optional.empty());
 
-        verify(studentMapping).toDto(any(Student.class));
-        assertEquals(23L,student.getId());
+            RuntimeException ex = assertThrows(RuntimeException.class,
+                    () -> studentService.findById(id));
 
-
-
-
-    }
-    @Test
-    void findstudetByIdTest() {
-        doThrow(new RuntimeException("not found")).when(studentRepository).findStudentById(anyLong());
-        Long id  = 12L;
-
-        assertThrows(RuntimeException.class,() -> studentService.findStudentById(id));
-        verify(studentRepository).findStudentById(id);
-
+            assertTrue(ex.getMessage().contains("99"));
+            verify(studentRepository).findById(id);
+            verifyNoInteractions(studentMapping);
+        }
     }
 
-    @Test
-    void create() {
+    @Nested
+    @DisplayName("findStudentById()")
+    class FindStudentById {
+        @Test
+        @DisplayName("возвращает DTO, если студент найден")
+        void shouldReturnDto_whenExists() {
+            Long id = 1L;
+            Student student = new Student();
+            student.setId(id);
+            student.setFirstName("Иван");
+
+            StudentDto dto = new StudentDto();
+            dto.setId(id);
+            dto.setFirstName("Иван");
+
+            when(studentRepository.findStudentById(id)).thenReturn(Optional.of(student));
+            when(studentMapping.toDto(student)).thenReturn(dto);
+
+            StudentDto result = studentService.findStudentById(id);
+
+            assertNotNull(result);
+            assertEquals(dto, result);
+            verify(studentRepository).findStudentById(id);
+            verify(studentMapping).toDto(student);
+        }
+
+        @Test
+        @DisplayName("кидает исключение, если студент не найден")
+        void shouldThrow_whenNotFound() {
+            Long id = 12L;
+            when(studentRepository.findStudentById(id)).thenReturn(Optional.empty());
+
+            RuntimeException ex = assertThrows(RuntimeException.class,
+                    () -> studentService.findStudentById(id));
+
+            assertTrue(ex.getMessage().contains("not found"));
+            verify(studentRepository).findStudentById(id);
+        }
     }
 
-    @Test
-    void update() {
+    @Nested
+    @DisplayName("create()")
+    class Create {
+        @Test
+        @DisplayName("создает и возвращает DTO")
+        void shouldCreateAndReturnDto() {
+            StudentDto dto = new StudentDto();
+            dto.setFirstName("Иван");
+            dto.setLastName("Сидоров");
+
+            Student student = new Student();
+            student.setId(1L);
+            student.setFirstName("Иван");
+            student.setLastName("Сидоров");
+
+            StudentDto savedDto = new StudentDto();
+            savedDto.setId(1L);
+            savedDto.setFirstName("Иван");
+            savedDto.setLastName("Сидоров");
+
+            when(studentMapping.toEntity(dto)).thenReturn(student);
+            when(studentRepository.save(student)).thenReturn(student);
+            when(studentMapping.toDto(student)).thenReturn(savedDto);
+
+            StudentDto result = studentService.create(dto);
+
+            assertNotNull(result);
+            assertEquals(savedDto, result);
+            verify(studentMapping).toEntity(dto);
+            verify(studentRepository).save(student);
+            verify(studentMapping).toDto(student);
+        }
     }
 
-    @Test
-    void delete() {
+    @Nested
+    @DisplayName("update()")
+    class Update {
+        @Test
+        @DisplayName("обновляет студента и возвращает DTO")
+        void shouldUpdateAndReturnDto() {
+            Long id = 1L;
+            Student existingStudent = new Student();
+            existingStudent.setId(id);
+            existingStudent.setFirstName("Старое");
+            existingStudent.setLastName("Фамилия");
 
+            StudentDto updateDto = new StudentDto();
+            updateDto.setFirstName("Новое");
+            updateDto.setLastName("НоваяФамилия");
+
+            Student updatedStudent = new Student();
+            updatedStudent.setId(id);
+            updatedStudent.setFirstName("Новое");
+            updatedStudent.setLastName("НоваяФамилия");
+
+            StudentDto resultDto = new StudentDto();
+            resultDto.setId(id);
+            resultDto.setFirstName("Новое");
+            resultDto.setLastName("НоваяФамилия");
+
+            when(studentRepository.findById(id)).thenReturn(Optional.of(existingStudent));
+            when(studentRepository.save(existingStudent)).thenReturn(updatedStudent);
+            when(studentMapping.toDto(updatedStudent)).thenReturn(resultDto);
+
+            StudentDto result = studentService.update(id, updateDto);
+
+            assertNotNull(result);
+            assertEquals("Новое", result.getFirstName());
+            verify(studentRepository).findById(id);
+            verify(studentRepository).save(existingStudent);
+        }
+
+        @Test
+        @DisplayName("кидает исключение при обновлении несуществующего студента")
+        void shouldThrow_whenNotFound() {
+            Long id = 99L;
+            StudentDto dto = new StudentDto();
+            when(studentRepository.findById(id)).thenReturn(Optional.empty());
+
+            RuntimeException ex = assertThrows(RuntimeException.class,
+                    () -> studentService.update(id, dto));
+
+            assertTrue(ex.getMessage().contains("99"));
+            verify(studentRepository).findById(id);
+            verify(studentRepository, never()).save(any());
+        }
     }
 
-    @Test
-    void assignProfile() {
+    @Nested
+    @DisplayName("delete()")
+    class Delete {
+        @Test
+        @DisplayName("успешно удаляет студента")
+        void shouldDeleteSuccessfully() {
+            Long id = 1L;
+            when(studentRepository.existsById(id)).thenReturn(true);
+
+            studentService.delete(id);
+
+            verify(studentRepository).existsById(id);
+            verify(studentRepository).deleteById(id);
+        }
+
+        @Test
+        @DisplayName("кидает исключение при удалении несуществующего студента")
+        void shouldThrow_whenNotFound() {
+            Long id = 99L;
+            when(studentRepository.existsById(id)).thenReturn(false);
+
+            RuntimeException ex = assertThrows(RuntimeException.class,
+                    () -> studentService.delete(id));
+
+            assertTrue(ex.getMessage().contains("99"));
+            verify(studentRepository).existsById(id);
+            verify(studentRepository, never()).deleteById(any());
+        }
     }
 }

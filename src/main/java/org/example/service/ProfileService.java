@@ -19,11 +19,15 @@ public class ProfileService {
 
     @Transactional(readOnly = true)
     public List<ProfileDto> findAll() {
-        return profileRepository.findAll().stream().map(profileMapping::toDto).toList()
-        ;
+        return profileRepository.findAll().stream().map(profileMapping::toDto).toList();
     }
 
-
+    @Transactional(readOnly = true)
+    public ProfileDto findById(Long id) {
+        Profile profile = profileRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Profile not found with id: " + id));
+        return profileMapping.toDto(profile);
+    }
 
     @Transactional
     public ProfileDto create(ProfileDto dto) {
