@@ -149,7 +149,7 @@ class StudentServiceTest {
             RuntimeException ex = assertThrows(RuntimeException.class,
                     () -> studentService.findStudentById(id));
 
-            assertTrue(ex.getMessage().contains("not found"));
+            assertTrue(ex.getMessage().contains("StudentNotFFOund"));
             verify(studentRepository).findStudentById(id);
         }
     }
