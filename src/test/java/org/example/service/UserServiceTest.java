@@ -8,6 +8,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -73,10 +75,10 @@ class UserServiceTest {
     @Nested
     @DisplayName("findById()")
     class FindById {
-        @Test
+        @ParameterizedTest
+        @CsvSource({"1", "2", "3", "100", "999"})
         @DisplayName("возвращает DTO, если пользователь найден")
-        void shouldReturnDto_whenExists() {
-            Long id = 1L;
+        void shouldReturnDto_whenExists(Long id) {
             User user = new User();
             user.setId(id);
             user.setName("Анна");
@@ -148,10 +150,10 @@ class UserServiceTest {
     @Nested
     @DisplayName("update()")
     class Update {
-        @Test
+        @ParameterizedTest
+        @CsvSource({"1", "2", "3"})
         @DisplayName("обновляет пользователя и возвращает DTO")
-        void shouldUpdateAndReturnDto() {
-            Long id = 1L;
+        void shouldUpdateAndReturnDto(Long id) {
             User existingUser = new User();
             existingUser.setId(id);
             existingUser.setName("СтароеИмя");
@@ -208,10 +210,10 @@ class UserServiceTest {
     @Nested
     @DisplayName("delete()")
     class Delete {
-        @Test
+        @ParameterizedTest
+        @CsvSource({"1", "2", "3", "100"})
         @DisplayName("успешно удаляет пользователя")
-        void shouldDeleteSuccessfully() {
-            Long id = 1L;
+        void shouldDeleteSuccessfully(Long id) {
             when(userRepository.existsById(id)).thenReturn(true);
 
             userService.delete(id);

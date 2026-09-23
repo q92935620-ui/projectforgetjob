@@ -8,6 +8,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -73,10 +75,10 @@ class PostServiceTest {
     @Nested
     @DisplayName("findById()")
     class FindById {
-        @Test
+        @ParameterizedTest
+        @CsvSource({"1", "2", "3", "100", "999"})
         @DisplayName("возвращает DTO, если пост найден")
-        void shouldReturnDto_whenExists() {
-            Long id = 1L;
+        void shouldReturnDto_whenExists(Long id) {
             Post post = new Post();
             post.setId(id);
             post.setTime("12:00");
@@ -150,10 +152,10 @@ class PostServiceTest {
     @Nested
     @DisplayName("update()")
     class Update {
-        @Test
+        @ParameterizedTest
+        @CsvSource({"1", "2", "3"})
         @DisplayName("обновляет пост и возвращает DTO")
-        void shouldUpdateAndReturnDto() {
-            Long id = 1L;
+        void shouldUpdateAndReturnDto(Long id) {
             Post existingPost = new Post();
             existingPost.setId(id);
             existingPost.setTime("10:00");
@@ -205,10 +207,10 @@ class PostServiceTest {
     @Nested
     @DisplayName("delete()")
     class Delete {
-        @Test
+        @ParameterizedTest
+        @CsvSource({"1", "2", "3", "100"})
         @DisplayName("успешно удаляет пост")
-        void shouldDeleteSuccessfully() {
-            Long id = 1L;
+        void shouldDeleteSuccessfully(Long id) {
             when(postRepository.existsById(id)).thenReturn(true);
 
             postService.delete(id);

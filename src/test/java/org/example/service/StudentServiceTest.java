@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -76,10 +77,10 @@ class StudentServiceTest {
     @Nested
     @DisplayName("findById()")
     class FindById {
-        @Test
+        @ParameterizedTest
+        @CsvSource({"1", "2", "3", "100", "999"})
         @DisplayName("возвращает DTO, если студент найден")
-        void shouldReturnDto_whenExists() {
-            Long id = 1L;
+        void shouldReturnDto_whenExists(Long id) {
             Student student = new Student();
             student.setId(id);
             student.setFirstName("Анна");
@@ -117,10 +118,12 @@ class StudentServiceTest {
     @Nested
     @DisplayName("findStudentById()")
     class FindStudentById {
-        @Test
+        @ParameterizedTest
+        @CsvSource({"2","1","3"})
+
         @DisplayName("возвращает DTO, если студент найден")
-        void shouldReturnDto_whenExists() {
-            Long id = 1L;
+        void shouldReturnDto_whenExists(Long id) {
+
             Student student = new Student();
             student.setId(id);
             student.setFirstName("Иван");
@@ -191,10 +194,10 @@ class StudentServiceTest {
     @Nested
     @DisplayName("update()")
     class Update {
-        @Test
+        @ParameterizedTest
+        @CsvSource({"1", "2", "3"})
         @DisplayName("обновляет студента и возвращает DTO")
-        void shouldUpdateAndReturnDto() {
-            Long id = 1L;
+        void shouldUpdateAndReturnDto(Long id) {
             Student existingStudent = new Student();
             existingStudent.setId(id);
             existingStudent.setFirstName("Старое");
@@ -245,10 +248,10 @@ class StudentServiceTest {
     @Nested
     @DisplayName("delete()")
     class Delete {
-        @Test
+        @ParameterizedTest
+        @CsvSource({"1", "2", "3", "100"})
         @DisplayName("успешно удаляет студента")
-        void shouldDeleteSuccessfully() {
-            Long id = 1L;
+        void shouldDeleteSuccessfully(Long id) {
             when(studentRepository.existsById(id)).thenReturn(true);
 
             studentService.delete(id);
