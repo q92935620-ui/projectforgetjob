@@ -11,7 +11,7 @@ import java.util.Optional;
 
 public interface PostRepository extends JpaRepository<Post,Long> {
     @Query("SELECT u FROM Post u WHERE u.place = :place")
-    Optional<Post> findPostsWherePlace(@Param("place") String place);
+    List<Post> findPostsWherePlace(@Param("place") String place);
     @EntityGraph(attributePaths = {"user"})
     List<Post> findAll();
     @Query("SELECT s FROM Post s JOIN FETCH s.user")

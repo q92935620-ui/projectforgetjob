@@ -10,6 +10,5 @@ import java.util.List;
 import java.util.Optional;
 
 public interface UserRepository extends JpaRepository<User,Long> {
-@Query("SELECT new org.example.dtoobject.UserDto(s.name , s.teg) " + "FROM User s WHERE s.id = :id")
-    List<UserDto> findNameAndTegWithDto(Long id );
+
 }

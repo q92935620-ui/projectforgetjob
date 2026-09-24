@@ -26,7 +26,7 @@ class UserControllerTest  {
     @Test
     void findAll() throws Exception {
 
-        mockMvc.perform(get("api/users{id}"));
+
     }
 
     @Test

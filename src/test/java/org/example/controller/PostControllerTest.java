@@ -63,7 +63,7 @@ class PostControllerTest {
         postDto.setPlace("Moscow");
         postDto.setId(1L);
         when(postService.create(postDto)).thenReturn(postDto);
-        mockMvc.perform(post("api/posts")
+        mockMvc.perform(post("/api/posts")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(postDto)))
                 .andExpect(status().isOk())
